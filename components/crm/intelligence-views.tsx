@@ -23,6 +23,7 @@ export default function IntelligenceViews({
   busy,
   perform,
 }: ViewProps) {
+  const [narration, setNarration] = useState(false);
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState<Answer | null>(null);
   if (view === "copilot")
@@ -57,11 +58,25 @@ export default function IntelligenceViews({
               </button>
             ))}
           </div>
+          {!isBrowserDemo() && (
+            <label>
+              <input
+                type="checkbox"
+                checked={narration}
+                onChange={(e) => setNarration(e.target.checked)}
+              />{" "}
+              Request optional server-generated narrative
+            </label>
+          )}
           <form
             className="ask-form"
             onSubmit={async (e) => {
               e.preventDefault();
-              const r = await perform({ action: "ask", question });
+              const r = await perform({
+                action: "ask",
+                question,
+                narrate: narration,
+              });
               if (r) setAnswer(r as Answer);
             }}
           >
@@ -82,6 +97,17 @@ export default function IntelligenceViews({
             <div className="answer">
               <Badge tone="green">{answer.method}</Badge>
               <p className="answer-body">{answer.answer}</p>
+              {answer.narrative && (
+                <aside className="notice">
+                  <Badge>Model narrative · {answer.narrative.status}</Badge>
+                  <p>{answer.narrative.text || answer.narrative.reason}</p>
+                  <small>
+                    Computed facts above remain authoritative. Citation and
+                    number checks do not prove semantic correctness; human
+                    review is required.
+                  </small>
+                </aside>
+              )}
               <details open>
                 <summary>
                   Query logic & evidence · {answer.evidence.length} sources
@@ -122,8 +148,9 @@ export default function IntelligenceViews({
           <h3>Honest AI labeling</h3>
           <p>
             This demo uses deterministic semantic routing. External
-            language-model narration is not connected. The server-side provider
-            adapter is available for a reviewed integration.
+            language-model narration is optional in the server edition. The
+            provider has bounded calls and validates citation IDs and numerical
+            tokens. Pages runs without a provider.
           </p>
           <Badge>No API key required</Badge>
         </Card>
@@ -301,7 +328,7 @@ export default function IntelligenceViews({
               <dt>Execution mode</dt>
               <dd>Deterministic semantic queries and rule agents</dd>
               <dt>Language model</dt>
-              <dd>Not connected · provider adapter extension available</dd>
+              <dd>Optional server configuration · disabled on GitHub Pages</dd>
               <dt>Rules / prompt policy</dt>
               <dd>
                 risk-v1, health-v1, semantic-v1 · versioned in source control
@@ -337,6 +364,38 @@ export default function IntelligenceViews({
                   </b>
                   <small>{a.action}</small>
                   <Badge>{a.status}</Badge>
+                  {a.status === "approved" &&
+                    a.requested_by === user.id &&
+                    can(user.role, "write") && (
+                      <button
+                        disabled={busy}
+                        onClick={() =>
+                          perform({ action: "execute_plan", id: a.id })
+                        }
+                      >
+                        Start approved plan
+                      </button>
+                    )}
+                  {a.status === "executed" &&
+                    a.requested_by === user.id &&
+                    d.recommendations.find((r) => r.id === a.recommendation_id)
+                      ?.status !== "completed" && (
+                      <button
+                        disabled={busy}
+                        onClick={() =>
+                          perform({
+                            action: "recommendation",
+                            id: a.recommendation_id,
+                            status: "completed",
+                            outcome:
+                              "Internal planning task completed by requesting user",
+                            reason_code: "useful",
+                          })
+                        }
+                      >
+                        Complete planning task
+                      </button>
+                    )}
                 </div>
                 {a.status === "pending" && can(user.role, "approve") && (
                   <div className="action-stack">

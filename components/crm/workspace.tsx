@@ -29,6 +29,7 @@ import type { Dataset, User, Opportunity } from "../../lib/crm/types";
 import { analytics, risk, daysSince } from "../../lib/crm/intelligence";
 import { can } from "../../lib/crm/security";
 import { Empty, Modal, Badge, money, when } from "./primitives";
+import SignalViews from "./signal-views";
 import Economics from "./economics";
 import AccountDetail from "./account-detail";
 import RevenueViews from "./revenue-views";
@@ -59,11 +60,13 @@ export const navigation = [
   ["accounts", "Customer 360", Building2],
   ["pipeline", "Pipeline", Columns3],
   ["copilot", "CRM copilot", Sparkles],
-  ["signals", "Changes & signals", Activity],
+  ["signals", "Datrixon Signals", Activity],
   ["agents", "Agent activity", Bot],
   ["quality", "Data quality", Database],
   ["analytics", "Revenue analytics", ChartNoAxesCombined],
   ["governance", "AI governance", ShieldCheck],
+  ["value", "AI value center", ChartNoAxesCombined],
+  ["integrations", "Activity capture", Activity],
   ["audit", "Audit center", ClipboardList],
   ["economics", "Build vs buy", Calculator],
 ] as const;
@@ -80,6 +83,9 @@ const descriptions: Record<string, string> = {
   governance: "Clear boundaries between intelligence and authority.",
   audit: "A record of who changed what, and why.",
   economics: "Compare ownership obligations, not just subscription prices.",
+  value: "Measure use and outcomes without invented savings.",
+  integrations:
+    "Capture activity with explicit provenance and human oversight.",
   notifications: "Updates from your workflows and customer signals.",
 };
 export async function api<T>(path: string, body?: unknown): Promise<T> {
@@ -452,9 +458,16 @@ export default function Workspace({
           {view === "accounts" && recordId ? (
             <AccountDetail id={recordId} {...props} />
           ) : (
-            <RevenueViews {...props} />
+            <RevenueViews
+              {...props}
+              view={view === "morning" ? "handled" : view}
+            />
           )}
-          <IntelligenceViews {...props} />
+          <SignalViews {...props} />
+          <IntelligenceViews
+            {...props}
+            view={view === "signals" ? "handled" : view}
+          />
           {view === "economics" && <Economics />}
           {!navigation.some((n) => n[0] === view) &&
             view !== "notifications" && (

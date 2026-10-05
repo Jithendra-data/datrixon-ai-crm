@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import { AccountTrends } from "./signal-views";
+import { memoryStatus } from "../../lib/crm/memory";
 import Link from "./link";
 import { Sparkles, Plus, Users, Activity, Building2 } from "lucide-react";
 import type { ViewProps } from "./workspace";
@@ -284,6 +286,17 @@ export default function AccountDetail({
                     <article key={m.id}>
                       <Badge>{m.method}</Badge>
                       <p>{m.summary}</p>
+                      <Badge>{memoryStatus(m.metadata, d, id)}</Badge>
+                      <details>
+                        <summary>Structured memory & source versions</summary>
+                        <pre className="memory-json">
+                          {JSON.stringify(
+                            JSON.parse(m.metadata).structured || {},
+                            null,
+                            2,
+                          )}
+                        </pre>
+                      </details>
                       <small>
                         Generated {when(m.created_at)} ·{" "}
                         {JSON.parse(m.evidence).length} source records. Snapshot
@@ -359,6 +372,7 @@ export default function AccountDetail({
           </Card>
         </div>
       </div>
+      <AccountTrends d={d} id={id} />
       {brief && (
         <Modal
           title={`Meeting brief · ${a.name}`}
@@ -398,6 +412,7 @@ export default function AccountDetail({
                 action: "log_activity",
                 account_id: id,
                 opportunity_id: f.get("opportunity_id") || null,
+                contact_id: f.get("contact_id") || null,
                 kind: f.get("kind"),
                 subject: f.get("subject"),
                 body: f.get("body"),
@@ -423,6 +438,19 @@ export default function AccountDetail({
                     {o.name}
                   </option>
                 ))}
+              </select>
+            </label>
+            <label>
+              Linked participant
+              <select name="contact_id">
+                <option value="">No participant linked</option>
+                {d.contacts
+                  .filter((c) => c.account_id === id)
+                  .map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} · {c.influence}
+                    </option>
+                  ))}
               </select>
             </label>
             <label>

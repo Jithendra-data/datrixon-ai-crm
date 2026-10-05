@@ -36,9 +36,10 @@ export default function Home() {
           help you <em>decide.</em>
         </h1>
         <p>
-          Customer intelligence. Clear priorities. Human control.
+          Traditional CRMs record what happened.
           <br />A focused revenue platform that turns relationship data into
-          evidence-backed action.
+          evidence-backed action. Datrixon explains what changed, why it
+          matters, and what to do next.
         </p>
         <div className="hero-actions">
           <Link className="button primary" href="/workspace">
@@ -55,7 +56,7 @@ export default function Home() {
         <div className="hero-preview">
           <div className="preview-top">
             <span className="brand-mark">D</span>
-            <span>REVENUE INTELLIGENCE</span>
+            <span>UNDERSTAND · DETECT · EXPLAIN · ACT</span>
             <span className="badge green">Evidence → decision → action</span>
           </div>
           <div className="preview-body">

@@ -1,4 +1,5 @@
 "use client";
+import { attribution } from "../../lib/crm/history";
 import Link from "./link";
 import { useState } from "react";
 import {
@@ -26,6 +27,7 @@ import {
   isOpen,
 } from "../../lib/crm/intelligence";
 import { can } from "../../lib/crm/security";
+import { rankedRecommendations } from "../../lib/crm/priorities";
 import type { ViewProps } from "./workspace";
 export function Recommendations({
   d,
@@ -34,25 +36,39 @@ export function Recommendations({
   perform,
   count = 5,
 }: Pick<ViewProps, "d" | "user" | "busy" | "perform"> & { count?: number }) {
-  const pending = d.recommendations
-    .filter(
-      (r) =>
-        r.status === "pending" ||
-        (r.status === "snoozed" &&
-          !!r.snoozed_until &&
-          r.snoozed_until <= new Date().toISOString()),
-    )
-    .sort((a, b) => b.priority - a.priority);
+  const [reason, setReason] = useState("not_relevant");
+  const pending = rankedRecommendations(d, user);
   return (
     <div className="recommendations">
+      {can(user.role, "write") && (
+        <label>
+          Feedback reason
+          <select
+            aria-label="Recommendation feedback reason"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+          >
+            {[
+              "not_relevant",
+              "already_handled",
+              "incorrect_evidence",
+              "timing",
+              "other",
+            ].map((x) => (
+              <option key={x}>{x}</option>
+            ))}
+          </select>
+        </label>
+      )}
       {pending.slice(0, count).map((r) => (
         <div className="recommendation" key={r.id}>
-          <div className="priority-marker">{r.priority}</div>
+          <div className="priority-marker">{r.ranking.score}</div>
           <div className="grow">
             <Link href={`/workspace/accounts/${r.account_id}`}>
               <b>{r.title}</b>
             </Link>
             <p>{r.reason}</p>
+            <small>{r.ranking.reason}</small>
             <div className="inline">
               <Badge>{r.agent}</Badge>
               <small>Rule-generated recommendation</small>
@@ -67,6 +83,7 @@ export function Recommendations({
                     action: "recommendation",
                     id: r.id,
                     status: "accepted",
+                    reason_code: "useful",
                   })
                 }
               >
@@ -93,6 +110,7 @@ export function Recommendations({
                     action: "recommendation",
                     id: r.id,
                     status: "dismissed",
+                    reason_code: reason,
                   })
                 }
               >
@@ -111,9 +129,10 @@ export function Recommendations({
   );
 }
 export default function RevenueViews(p: ViewProps) {
-  const { d, user, m, view, busy, perform, openDeal, explain } = p;
+  const { d, m, view, openDeal, explain } = p;
   const [search, setSearch] = useState("");
   const [mode, setMode] = useState("board");
+  const change = attribution(d, "forecast");
   const accountName = (id: string) =>
     d.accounts.find((a) => a.id === id)?.name || "Account";
   if (view === "overview")
@@ -155,10 +174,18 @@ export default function RevenueViews(p: ViewProps) {
               <Badge tone="green">Computed from CRM records</Badge>
             </div>
             <p>
-              Your open pipeline stands at <b>{money(m.pipeline)}</b>. Recorded
-              stage movements contributed <b>{money(m.forecastDelta)}</b> to
-              weighted pipeline in the last seven days. <b>{money(m.stale)}</b>{" "}
-              has no recorded customer contact in at least 14 days.
+              Your open pipeline stands at <b>{money(m.pipeline)}</b>.{" "}
+              {change.covered ? (
+                <>
+                  Current-quarter weighted forecast changed{" "}
+                  <b>{money(change.delta)}</b> against eligible baseline frames
+                  across {change.covered} accounts.{" "}
+                </>
+              ) : (
+                <>No historical forecast baseline is available. </>
+              )}
+              <b>{money(m.stale)}</b> has no recorded customer contact in at
+              least 14 days.
             </p>
             <Link href="/workspace/signals">
               See what changed <ArrowRight size={15} />
@@ -293,75 +320,6 @@ export default function RevenueViews(p: ViewProps) {
           </Card>
         </div>
       </>
-    );
-  if (view === "morning")
-    return (
-      <div className="two-col">
-        <Card title="Your priorities" eyebrow="ORDERED BY DETERMINISTIC SCORE">
-          <Recommendations {...p} count={10} />
-        </Card>
-        <div>
-          <Card title="Tasks needing attention">
-            {d.tasks
-              .filter((t) => t.status !== "completed")
-              .sort((a, b) => a.due_date.localeCompare(b.due_date))
-              .slice(0, 10)
-              .map((t) => (
-                <div className="list-row" key={t.id}>
-                  <div>
-                    <b>{t.title}</b>
-                    <small
-                      className={
-                        t.due_date < new Date().toISOString().slice(0, 10)
-                          ? "red"
-                          : ""
-                      }
-                    >
-                      Due {t.due_date} ·{" "}
-                      {d.users.find((u) => u.id === t.owner_id)?.name}
-                    </small>
-                  </div>
-                  {can(user.role, "write") && (
-                    <button
-                      disabled={busy}
-                      onClick={() => perform({ action: "task", id: t.id })}
-                    >
-                      Complete
-                    </button>
-                  )}
-                </div>
-              ))}
-          </Card>
-          <Card title="Accepted recommendations">
-            {d.recommendations
-              .filter((r) => r.status === "accepted")
-              .map((r) => (
-                <div className="list-row" key={r.id}>
-                  <div>
-                    <b>{r.title}</b>
-                    <small>Accepted by a person · planning task created</small>
-                  </div>
-                  {can(user.role, "write") && (
-                    <button
-                      disabled={busy}
-                      onClick={() =>
-                        perform({
-                          action: "recommendation",
-                          id: r.id,
-                          status: "completed",
-                          outcome:
-                            "Marked complete by user; no external outcome verified",
-                        })
-                      }
-                    >
-                      Complete
-                    </button>
-                  )}
-                </div>
-              ))}
-          </Card>
-        </div>
-      </div>
     );
   if (view === "accounts")
     return (
@@ -580,76 +538,6 @@ export default function RevenueViews(p: ViewProps) {
             </div>
           </Card>
         )}
-      </>
-    );
-  if (view === "signals")
-    return (
-      <>
-        <div className="metrics">
-          <Metric
-            label="Stage-driven forecast change"
-            value={compact(m.forecastDelta)}
-            detail="Trailing 7 days · recorded transitions"
-            onClick={() => explain("Weighted")}
-          />
-          <Metric
-            label="Stale open pipeline"
-            value={compact(m.stale)}
-            detail="No contact for 14+ days"
-          />
-          <Metric
-            label="At-risk accounts"
-            value={String(m.health.filter((h) => h.score < 50).length)}
-            detail="health-v1 score below 50"
-          />
-          <Metric
-            label="Past close dates"
-            value={String(
-              d.opportunities.filter(
-                (o) =>
-                  isOpen(o) &&
-                  o.close_date < new Date().toISOString().slice(0, 10),
-              ).length,
-            )}
-            detail="Open deals with elapsed close dates"
-          />
-        </div>
-        <Card
-          title="Why did the forecast change?"
-          eyebrow="RECORD-LEVEL ATTRIBUTION"
-        >
-          <p>
-            These are contributions from recorded stage transitions. They are
-            not a full period-over-period forecast snapshot.
-          </p>
-          {m.movement.map((h) => (
-            <div className="signal-row" key={h.id}>
-              <span className={`signal-icon ${h.delta < 0 ? "red" : "green"}`}>
-                <Activity size={18} />
-              </span>
-              <div className="grow">
-                <b>
-                  {d.opportunities.find((o) => o.id === h.opportunity_id)?.name}
-                </b>
-                <p>
-                  {h.from_stage} → {h.to_stage} · {h.old_probability}% →{" "}
-                  {h.new_probability}% · {when(h.created_at)}
-                </p>
-                <small>
-                  {money(h.amount)} × ({h.new_probability} − {h.old_probability}
-                  ) / 100
-                </small>
-              </div>
-              <strong className={h.delta < 0 ? "red" : "green"}>
-                {h.delta > 0 ? "+" : ""}
-                {money(h.delta)}
-              </strong>
-            </div>
-          ))}
-        </Card>
-        <Card title="Current attention signals">
-          <Recommendations {...p} count={6} />
-        </Card>
       </>
     );
   if (view === "analytics")
