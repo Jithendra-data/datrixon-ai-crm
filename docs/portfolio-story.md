@@ -31,3 +31,7 @@ The current assistant is deterministic semantic routing. It has no database tool
 Stable duplicate identities matter: database ordering changed which candidate appeared to exist, and integration tests caught it. Full document navigation replaced a failing experimental client-router path. Those are concrete engineering lessons, not claims of scale.
 
 Discuss demo identity versus production authentication, rule scores versus calibrated predictions, stage attribution versus full snapshots, and application audit versus immutable evidence. Do not claim enterprise customers, measured savings, benchmark results, live integration or work performed by an external model.
+
+## Discussing the intelligence upgrade
+
+“I moved the demonstration from current-state dashboards toward evidence-backed change intelligence. Versioned per-account frames let me reconcile forecast changes to individual records, disclose missing coverage, and separate authored synthetic history from observations. I added exact-match email capture and stale-aware structured memory without pretending to have production mailbox connectors. Optional model narration has no database or action authority; deterministic facts survive provider failure. The most important tradeoff is a bounded SQLite reference architecture versus production requirements for identity, lifecycle history, scheduled ingestion and validated outcomes.”

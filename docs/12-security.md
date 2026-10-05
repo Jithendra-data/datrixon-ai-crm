@@ -11,3 +11,9 @@ Authorization executes before every mutation. Representatives operate on owned a
 The API limits payload length, workspace mutation throughput (30 requests per UTC minute) and global demo creation (100 workspaces per UTC day). Reads cap at 2,000 rows per table and fail explicitly. Quotas are not full DDoS protection: edge request limiting and identity quotas remain deployment work.
 
 No SSO, MFA, password login or real customer tenancy is claimed. Add enterprise identity and memberships before real use. Demo role switching must be removed, not repurposed as login. Audit is application-append-only, not tamper-proof against database administrators. Backups, restore drills, retention scheduling, WAF policy, vulnerability monitoring and penetration testing remain operational gates. No compliance certification is asserted.
+
+## Narrative and ingestion boundaries
+
+The server adapter is absent from the Pages bundle. API configuration is operator-owned, requires HTTPS and rejects redirects. Narration has no tools, database credentials or write authority; output is separately labeled after shape/citation/numeric checks. Atomic quotas and bounded reads/deadlines limit provider exposure. `.env*` and `.dev.vars*` secret files are ignored.
+
+Imported email is explicitly unverified synthetic input. Exact matching and workspace-scoped contacts prevent guessed association; a unique source event key prevents duplicate records. The human log-activity action validates that both optional contact and opportunity belong to the selected accessible account.

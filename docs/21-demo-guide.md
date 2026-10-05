@@ -15,3 +15,15 @@ Start a fresh synthetic workspace. Julian Park is the default Sales Manager. The
 9. **Build vs buy:** change engineering maintenance costs and observe the three-year tradeoff.
 
 All names and events are fictional. Logging an email does not send it. Completing a recommendation does not prove external customer action. Server session access lasts 24 hours. The Pages scenario lives in browser tab storage; use End demo session to reset it.
+
+## Upgraded demo tour
+
+1. Open Datrixon Signals, filter Forecast, inspect source details and compare the last week with yesterday.
+2. Open Revenue analytics and select pipeline, paid order value or current-quarter weighted forecast in **Why did this change?**. Inspect baseline provenance and matched-account coverage.
+3. Switch personas and open My Morning Brief. Ranking includes role, ownership, exposure and urgency with its arithmetic displayed.
+4. Accept a recommendation, switch to a different authorized reviewer, approve it in AI governance, switch back, start the plan and mark it complete. Inspect the AI Value Center feedback ledger.
+5. Import a synthetic email in Activity capture. Open the linked account's Memory tab; see structured facts and freshness. Log a new activity and see that the older memory becomes stale.
+6. For relationship coverage, log a deal-linked interaction with a named economic buyer. Account-only activity does not clear the coverage warning.
+7. Change cost growth assumptions and select a five-year horizon in Build vs buy.
+
+Existing tabs preserve their previous data through schema migration. They do not receive fabricated baseline history; start a fresh demo only if you want the authored synthetic history scenario.

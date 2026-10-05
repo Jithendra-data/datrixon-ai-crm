@@ -11,3 +11,7 @@ No model can send messages, merge customers, reassign owners, execute SQL or acc
 Governance exposes enabled workflows and access restrictions. Rule agents are currently enabled by code configuration; the UI does not pretend each agent has a working toggle. Durable failure history, configurable agent enablement and calibrated confidence thresholds belong on the roadmap.
 
 Before adding generative narration, evaluate prompt injection, evidence faithfulness, cross-scope leakage, timeouts, cost budgets and provider logging. Generated prose must remain visibly separate from computed facts; high-impact action execution requires a new action-specific authorization design.
+
+## Approval execution and feedback
+
+Accepted recommendations create pending internal plans. A different authorized reviewer approves/rejects. Only the requesting user may start an approved plan; the state becomes executed and its task in_progress. Completion is then human-reported through the recommendation lifecycle. Direct task completion cannot bypass that lifecycle. No external email, merge or commercial action is performed. Every recommendation transition records decision, user, optional reason and outcome in the feedback ledger.

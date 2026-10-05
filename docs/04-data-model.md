@@ -1,6 +1,6 @@
 # Data model
 
-The authoritative [schema](../db/schema.ts) has 36 tables with generated Drizzle migrations. CRM keys are `(workspace_id,id)`; core relationships use composite foreign keys. Currency is integer USD cents. Timestamps, source and metadata are standard; lifecycle and ownership are explicit where meaningful.
+The authoritative [schema](../db/schema.ts) has 40 tables with generated Drizzle migrations. CRM keys are `(workspace_id,id)`; core relationships use composite foreign keys. Currency is integer USD cents. Timestamps, source and metadata are standard; lifecycle and ownership are explicit where meaningful.
 
 ```mermaid
 erDiagram
@@ -33,3 +33,17 @@ Teams and territories classify ownership. Tags use an account junction. Data sou
 Owners are users, not a redundant table. Interactions are typed activities rather than duplicate timelines. Quotes/orders have line items. Leads/campaigns are modeled synthetic context; full marketing execution is not implemented. The relationship map is a compact account-contact view.
 
 Core relationships reject cross-workspace references. Some ancillary actor/evidence references remain strings requiring application checks; universal FK coverage is not claimed. JSON metadata is supplementary, not a replacement for normalized commercial fields.
+
+## Intelligence extension
+
+Four tables add intelligence_snapshots (versioned account frames), recommendation_feedback (human decisions and reasons), ingestion_events (unique source event provenance), and activity_contacts (explicit relationship engagement). Each uses workspace identity and relational references.
+
+```mermaid
+erDiagram
+  accounts ||--o{ intelligence_snapshots : observed
+  accounts ||--o{ ingestion_events : receives
+  contacts ||--o{ activity_contacts : participates
+  activities ||--o{ activity_contacts : links
+  recommendations ||--o{ recommendation_feedback : evaluated
+  users ||--o{ recommendation_feedback : decides
+```

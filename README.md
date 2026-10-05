@@ -10,7 +10,7 @@ A working portfolio/reference implementation combining a relational customer mod
 
 **[Overview](docs/00-overview.md) · [Architecture](docs/03-architecture.md) · [Demo guide](docs/21-demo-guide.md) · [Security](SECURITY.md) · [Limitations](docs/22-limitations.md)**
 
-> All organizations, people and business records are synthetic. This is not a certified Salesforce replacement, an enterprise production deployment, or evidence of measured cost savings. The working copilot and agents are deterministic; an external language model is not connected.
+> All organizations, people and business records are synthetic. This is not a certified Salesforce replacement, an enterprise production deployment, or evidence of measured cost savings. The Pages copilot and agents are deterministic. The server edition optionally adds bounded model narration; no live provider credential is configured in the public demo.
 
 ## Two runnable editions
 
@@ -41,7 +41,7 @@ The answer is deliberately focused: clean relationships, useful signals, traceab
 | Customer 360        | Joins contacts, activities, notes, cases, tasks, opportunities, orders, products, stage history and recommendations |
 | Pipeline            | Kanban and analytical views; create deals; edit stage, next action and close date with optimistic version checks    |
 | CRM copilot         | Routes supported questions to approved semantic queries; shows sources, logic and limitations                       |
-| Changes & signals   | Attributes weighted-value changes to recorded stage movements, with the arithmetic                                  |
+| Datrixon Signals    | Eight signal categories, timestamped account frames, exact before/after record attribution                          |
 | Agents & actions    | Eight rule agents; persistent run logs; accept, dismiss, snooze and complete recommendations                        |
 | Governance          | Role enforcement, independent planning approval, workflow controls and an audit center                              |
 | Data quality        | Duplicate candidates, missing ownership/contact data, stale deals and overdue close dates                           |
@@ -49,6 +49,18 @@ The answer is deliberately focused: clean relationships, useful signals, traceab
 | Build vs buy        | Editable license, implementation, infrastructure, AI, maintenance, security and switching assumptions               |
 
 ![Customer 360](docs/screenshots/customer-360.jpg)
+
+## What changed in the intelligence upgrade
+
+- **Understand:** structured CRM memory with source-version staleness and account health/risk trajectories.
+- **Detect:** Datrixon Signals with eight categories, severity filters and explicit current-condition labels.
+- **Explain:** snapshot-backed forecast, pipeline, revenue and risk attribution with exact record contributions.
+- **Act:** persona-ranked Morning Brief, reason-coded feedback, independent approval and explicit internal planning execution.
+- **Measure:** AI Value Center counts actual recommendations, decisions, questions, memory generations and imported events; no invented savings.
+- **Capture:** idempotent demo email ingestion with exact contact matching, provenance and atomic memory refresh.
+- **Evaluate:** three/five-year ownership costs with compound seat, license and operating-cost growth.
+
+See [Signals and history](docs/25-signals-and-history.md), [ingestion and memory](docs/26-ingestion-and-memory.md), and [optional server narration](docs/06-ai-architecture.md).
 
 ## Architecture in one minute
 
@@ -67,7 +79,7 @@ flowchart LR
   NBA --> HUMAN[Human decision + independent review]
   CRM --> WF[Allow-listed workflows]
   WF --> NT[Tasks + notifications]
-  SEM -. extension boundary .-> LLM[Optional narrative provider]
+  SEM -. optional server narration .-> LLM[Optional narrative provider]
 ```
 
 **Stack:** TypeScript strict mode, React 19, Next.js App Router conventions on the Vinext/Cloudflare Worker runtime, SQLite/D1, Drizzle migrations, Zod, Lucide, Node test runner and GitHub Actions. The responsive CSS is purpose-built. No separate warehouse or queue is needed for the bounded reference dataset.
@@ -97,14 +109,14 @@ Docker configuration is included in [docker-compose.yml](docker-compose.yml); it
 
 1. Select a command-center metric to inspect its formula and lineage.
 2. Open Meridian Robotics. Review health factors, timeline and stakeholders; generate a meeting brief.
-3. Ask the copilot **“Why did forecasted revenue decline?”** Inspect stage-change evidence.
+3. Ask the copilot **“Why did forecasted revenue decline?”** Inspect snapshot provenance, coverage and exact record contributions.
 4. Edit a pipeline deal's next action. Verify its audit event and stage history.
 5. Accept a recommendation, then switch to Elena Vasquez, Executive, for independent planning approval. No email or commercial mutation occurs.
 6. Run workflows from Governance and inspect Notifications. Switch to Analyst and verify mutation restrictions.
 
 ## Intelligence with an explicit trust boundary
 
-Risk and health are explainable heuristics, not trained probabilities. Forecast categories overlap and must not be summed. Paid order value is not GAAP recognized revenue. Stage-history attribution is not a complete period-over-period forecast snapshot.
+Risk and health are explainable heuristics, not trained probabilities. Forecast categories overlap and must not be summed. Paid order value is not GAAP recognized revenue. Historical comparisons disclose baseline age and matched-account coverage; synthetic baseline frames are authored scenarios, not observed history.
 
 The copilot never generates SQL or gets database credentials. Unknown questions fail closed. The `NarrativeProvider` interface and OpenAI-compatible adapter are extension points; provider configuration, secrets and output validation need further integration. No API key is shipped to the browser.
 
@@ -112,7 +124,7 @@ Implemented agents: Opportunity Risk, Customer Health, Follow-Up, Pipeline Hygie
 
 ## Data & security
 
-The **36-table relational model** includes CRM entities, junctions, stage history, governance, sessions and quota counters. Currency uses integer USD cents. Workspace IDs participate in core entity keys and foreign keys. Interactions share one activities table; ownership is a user relationship.
+The **40-table relational model** includes CRM entities, junctions, stage history, governance, sessions and quota counters. Currency uses integer USD cents. Workspace IDs participate in core entity keys and foreign keys. Interactions share one activities table; ownership is a user relationship.
 
 The server edition’s controls include prepared statements, Zod allow-lists, server-side roles and account scope, hashed random session tokens, HttpOnly/SameSite cookies, origin checks, bounded requests, quotas, optimistic concurrency and transactional audit writes. No uploads, arbitrary SQL, email sending or automatic merges are exposed.
 
@@ -154,3 +166,5 @@ build/, vendor/      Server-edition Worker build integration
 Evidence and maintainability take priority over breadth. Leads, campaigns and quotes have a relational model; their management workflows are narrower than a full CRM. No live inbox/calendar ingestion is configured. Workflows run on demand. No claim is made that this replaces every CRM workflow.
 
 See [documentation](docs/00-overview.md), [decisions](docs/24-design-decisions.md), [roadmap](docs/23-roadmap.md) and the [interview narrative](docs/portfolio-story.md). MIT licensed; see [LICENSE](LICENSE), [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
+
+[View the refreshed desktop and mobile screenshot gallery](docs/screenshots.md).

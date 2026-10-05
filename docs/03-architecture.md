@@ -39,3 +39,7 @@ flowchart LR
 ```
 
 There is no trusted server in this distribution. The browser owner can inspect or modify all data and persona state. The Worker edition above demonstrates enforced boundaries; the Pages edition demonstrates product workflows without requiring backend credentials. Both editions share migrations, scoring, semantic queries and mutation rules.
+
+## Intelligence boundary
+
+Historical account frames and current scoped records feed pure attribution/Signals functions. Structured memory uses source-version fingerprints. Ingestion commits activity, provenance, participant link, memory and observation together. Model narration is injected by the server route through a provider interface; the shared browser service has no configured provider. New modules are `history`, `memory`, `ingestion`, `priorities`, `narrative` and `narrative.server` under `lib/crm`.

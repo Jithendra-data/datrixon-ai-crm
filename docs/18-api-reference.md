@@ -32,3 +32,7 @@ Opportunity amounts are integer cents. Dates use YYYY-MM-DD with calendar valida
 Status codes: 400 invalid request, 401 absent/expired session, 403 role/origin restriction, 404 missing scoped record, 409 conflict, 413 oversized payload, 422 reference capacity, 429 quota, 503 missing DB, 500 safe internal failure.
 
 The workspace endpoint is a bounded demo aggregate, not an unlimited enterprise export API. Search is substring-based, not fuzzy. Full OpenAPI generation and resource-level pagination are future improvements.
+
+## Intelligence upgrade actions
+
+POST `/api/actions` additionally accepts `capture_snapshot`, `import_email` (external_id, from, subject, body, occurred_at), and `execute_plan` (approval id). Recommendation decisions accept optional reason_code and outcome. Ask accepts optional narrate boolean; only the server API can inject a configured provider. See the strict discriminated schema in `lib/crm/service.ts`. All actions retain existing origin, session, scope and role checks.

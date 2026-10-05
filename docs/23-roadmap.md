@@ -6,7 +6,7 @@ Replace demo sessions with SSO/MFA and explicit memberships. Introduce productio
 
 ## Improve decision quality
 
-Add historical forecast/health snapshots and complete change attribution. Define evaluation datasets, outcome windows and user feedback reasons. Calibrate risk only with representative historical outcomes. Version recommendation recurrence so changed conditions can responsibly reopen work.
+Expand the implemented snapshot comparisons with scheduled capture, retention, full account lifecycle coverage and field-level causal decomposition. Define evaluated outcome windows for the implemented reason-coded feedback ledger. Calibrate risk only with representative historical outcomes. Version recommendation recurrence so changed conditions can responsibly reopen work.
 
 ## Connect actual workflows
 

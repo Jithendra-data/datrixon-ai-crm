@@ -25,3 +25,7 @@ For a separate Cloudflare deployment, create D1, set its actual ID in a separate
 ## Operations before real data
 
 Use the server edition and replace persona provisioning with enterprise identity and workspace memberships; disable the demo endpoint. Add scheduled expiry cleanup, tested backup/restore, edge limiting, monitoring, WORM audit export and managed secrets. Session expiration denies access but does not delete workspace rows. Test integrations and migration paths in staging. Never connect the static Pages sandbox to confidential data.
+
+## Optional local narrative setup
+
+Create ignored `.env.local` containing `AI_ENDPOINT`, `AI_MODEL`, and `AI_API_KEY` (see `.env.example`), then run `npm start -- --env-file .env.local`. This uses Wrangler's explicit environment-file flag. Enable the narration checkbox in the server copilot. Never place those values in frontend-prefixed variables or GitHub Pages configuration. Deployment secrets belong in the chosen Worker's secret manager. The public Pages deployment remains keyless.

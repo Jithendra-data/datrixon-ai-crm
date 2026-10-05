@@ -20,3 +20,7 @@ The goal is not minimum lines or maximum screens. It is a coherent, reviewable d
 ## ADR: GitHub Pages with a browser-local SQLite adapter
 
 The requested host is GitHub Pages, which cannot run the application API. The public edition reuses the domain services and migrations through a sql.js Database adapter and a small local transport. The server edition remains runnable and tested. This avoids a second implementation of risk, approval and workflow rules while making the absence of a trusted server explicit. Tab storage is disposable, identity is simulated, and no real customer data or provider keys should ever enter this edition. Hash navigation supports refresh without Pages rewrites. The public bundle loads SQLite lazily when a workspace is opened.
+
+## ADR: Observations before narration
+
+Store validated, versioned account frames and compute exact matched-record differences before requesting optional model wording. This makes baseline coverage and missing history explicit and leaves calculations usable without a model. Authored synthetic baseline frames are labeled scenarios. The cost is a bounded snapshot store and the need for future scheduling/retention; an LLM is never asked to reconstruct missing history.

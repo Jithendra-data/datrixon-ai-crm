@@ -9,3 +9,7 @@ Break-even years = (build initial − buy initial) / (buy annual − build annua
 Missing factors include discount rate, inflation, growth, taxes, residual value, outage cost, feature gaps, technical debt, vendor dependency, integration complexity and engineering opportunity cost. Compare equivalent scope and service commitments. A spreadsheet result is not a procurement recommendation.
 
 Customization and control can justify building even when costs are higher. Conversely, a capable vendor and limited internal engineering capacity can make buying the rational choice.
+
+## Growth and horizon
+
+The calculator now supports three or five years. Seat count, per-seat license price and build operating costs compound independently using configurable annual rates. SaaS integration/support stay fixed. Break-even is the first cumulative crossing, interpolated uniformly within the year, and is reported as unreached when outside the selected horizon. No NPV, taxes, depreciation or measured savings are claimed.
