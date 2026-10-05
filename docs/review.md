@@ -19,7 +19,7 @@ This is an internal engineering review record, not independent certification. Re
 
 GitHub Actions independently passed clean installation, lint, strict type checks, 36 tests, formatting, server build, migrations, HTTP smoke checks and the Pages build. The Pages deployment succeeded. Desktop and 390px mobile checks covered navigation, creation and persistence, evidence-backed copilot, agent execution, persona switching, meeting memory, approval requests and the calculator. Ten screenshots are included. No new browser-console errors were observed on the Pages build.
 
-A local Windows emulator run intermittently stalled during sequential HTTP checks; a concurrent liveness probe released the pending request. The unattended Linux CI smoke passed. This environment-specific behavior has not been established as a production runtime defect, and no performance guarantee is claimed. Docker remains untested. The public Pages sandbox has no server authentication or confidential-data isolation.
+The original pinned Wrangler 4.92 emulator intermittently stalled on sequential authenticated responses. The upgrade reproduced this on Linux CI as well as Windows. Updating the compatible stack to Wrangler 4.147.0, Cloudflare Vite plugin 1.62.5 and Worker types 5.20261005.1 eliminated the local reproduction without modifying the smoke assertions or adding liveness probes. This is a tested development-runtime fix, not a performance guarantee or a claim about Cloudflare production behavior. Docker remains untested. The public Pages sandbox has no server authentication or confidential-data isolation.
 
 ## Intelligence upgrade review
 

@@ -30,13 +30,12 @@ jobs:
         run: |
           npm start > /tmp/datrixon-server.log 2>&1 &
           SERVER_PID=$!
-          trap 'kill $SERVER_PID || true' EXIT
+          trap 'kill $SERVER_PID || true; cat /tmp/datrixon-server.log' EXIT
           for i in $(seq 1 60); do
             if curl --fail --silent http://127.0.0.1:8787/api/health; then break; fi
             sleep 1
           done
           npm run test:smoke
-          cat /tmp/datrixon-server.log
       - run: npm run build:pages
       - uses: actions/upload-pages-artifact@v3
         if: github.event_name != 'pull_request'

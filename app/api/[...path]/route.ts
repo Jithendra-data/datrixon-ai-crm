@@ -164,8 +164,10 @@ async function handle(req: Request) {
           metrics: analytics(data),
           ai: {
             provider: "deterministic",
-            narrative_configured: false,
-            mode: "Approved semantic queries; no external model connected",
+            narrative_configured: !!serverProvider(
+              env as unknown as Record<string, unknown>,
+            ),
+            mode: "Approved semantic queries; optional configured server narrative",
           },
           synthetic: true,
         },
