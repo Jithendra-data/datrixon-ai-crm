@@ -26,3 +26,16 @@ flowchart TD
 The HTTP route owns transport, cookies, quotas and error responses. The service owns authorization, validation and transactional mutations. The repository owns database access. Pure intelligence modules operate on scoped datasets. UI visibility is never the authorization boundary.
 
 SQLite/D1 supports real persistence without a database server. Reads are bounded to 2,000 rows per operational table and fail rather than silently truncate. Production scale needs resource pagination, database-side aggregation and potentially PostgreSQL plus an analytical replica. A service mesh, queue and warehouse would add operating cost without improving the current demonstration.
+
+## Public GitHub Pages distribution
+
+```mermaid
+flowchart LR
+  Pages[GitHub Pages static assets] --> React[React workspace]
+  React --> Transport[Browser-local demo transport]
+  Transport --> Shared[Shared validated CRM services]
+  Shared --> SQLite[(SQLite WASM)]
+  SQLite --> Tab[Disposable tab storage]
+```
+
+There is no trusted server in this distribution. The browser owner can inspect or modify all data and persona state. The Worker edition above demonstrates enforced boundaries; the Pages edition demonstrates product workflows without requiring backend credentials. Both editions share migrations, scoring, semantic queries and mutation rules.

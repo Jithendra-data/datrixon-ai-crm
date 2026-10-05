@@ -2,6 +2,8 @@
 
 ### AI-native customer intelligence & revenue operations
 
+**[Live demo on GitHub Pages](https://jithendra-data.github.io/datrixon-ai-crm/) · [Validation & deployment](https://github.com/Jithendra-data/datrixon-ai-crm/actions)**
+
 **Traditional CRMs capture data. Datrixon interprets records, explains changes, identifies risk and puts the next useful action in front of a person.**
 
 A working portfolio/reference implementation combining a relational customer model, deterministic intelligence, observable agents and explicit human decisions. This is a separate project from [Datrixon ERP Intelligence](https://github.com/Jithendra-data/datrixon).

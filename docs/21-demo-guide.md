@@ -14,4 +14,4 @@ Start a fresh synthetic workspace. Julian Park is the default Sales Manager. The
 8. **Analyst persona:** verify read-only behavior. **Maya Thompson:** verify account-scoped results.
 9. **Build vs buy:** change engineering maintenance costs and observe the three-year tradeoff.
 
-All names and events are fictional. Logging an email does not send it. Completing a recommendation does not prove external customer action. Session access lasts 24 hours.
+All names and events are fictional. Logging an email does not send it. Completing a recommendation does not prove external customer action. Server session access lasts 24 hours. The Pages scenario lives in browser tab storage; use End demo session to reset it.
