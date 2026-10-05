@@ -1,0 +1,11 @@
+services:
+  crm:
+    build: .
+    ports:
+      - "8787:8787"
+    volumes:
+      - crm-data:/app/.wrangler
+    restart: unless-stopped
+volumes:
+  crm-data:
+

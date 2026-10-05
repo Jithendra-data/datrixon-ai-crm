@@ -1,0 +1,9 @@
+node_modules
+.git
+.tooling
+.wrangler
+.sites-runtime
+dist
+.env*
+*.zip
+
