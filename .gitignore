@@ -52,3 +52,7 @@ next-env.d.ts
 /test-results/
 /playwright-report/
 !.env.example
+
+# Local Worker secret files
+.dev.vars
+.dev.vars.*

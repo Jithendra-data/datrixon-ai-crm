@@ -1,3 +1,4 @@
+import { serverProvider } from "../../../lib/crm/narrative.server";
 import { env } from "cloudflare:workers";
 import {
   type Database,
@@ -281,9 +282,18 @@ async function handle(req: Request) {
         return Response.json({ ok: true }, { headers });
       }
       if (path === "/api/actions")
-        return Response.json(await mutate(database, session, body, requestId), {
-          headers,
-        });
+        return Response.json(
+          await mutate(
+            database,
+            session,
+            body,
+            requestId,
+            serverProvider(env as unknown as Record<string, unknown>),
+          ),
+          {
+            headers,
+          },
+        );
       if (path === "/api/logout") {
         const token = req.headers
           .get("cookie")!

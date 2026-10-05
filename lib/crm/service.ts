@@ -1,3 +1,7 @@
+import { narrate, type NarrativeProvider } from "./narrative";
+import { emailSchema, ingestEmail } from "./ingestion";
+import { snapshotRows } from "./history";
+import { accountMemory } from "./memory";
 import { z } from "zod";
 import { type Database, loadData, insert, baseRow, audit } from "./repository";
 import { authorize, AppError, scopeData } from "./security";
@@ -21,6 +25,9 @@ const date = z
     return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
   }, "Invalid calendar date");
 export const mutationSchema = z.discriminatedUnion("action", [
+  emailSchema,
+  z.object({ action: z.literal("execute_plan"), id }).strict(),
+  z.object({ action: z.literal("capture_snapshot") }).strict(),
   z
     .object({
       action: z.literal("create_opportunity"),
@@ -53,6 +60,7 @@ export const mutationSchema = z.discriminatedUnion("action", [
       action: z.literal("log_activity"),
       account_id: id,
       opportunity_id: id.nullable().optional(),
+      contact_id: id.nullable().optional(),
       kind: z.enum(["call", "email", "meeting", "note"]),
       subject: text.max(160),
       body: text,
@@ -64,6 +72,16 @@ export const mutationSchema = z.discriminatedUnion("action", [
       id,
       status: z.enum(["accepted", "dismissed", "snoozed", "completed"]),
       outcome: z.string().max(500).optional(),
+      reason_code: z
+        .enum([
+          "useful",
+          "not_relevant",
+          "already_handled",
+          "incorrect_evidence",
+          "timing",
+          "other",
+        ])
+        .optional(),
     })
     .strict(),
   z.object({ action: z.literal("task"), id }).strict(),
@@ -78,7 +96,13 @@ export const mutationSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("run_agents") }).strict(),
   z.object({ action: z.literal("run_workflows") }).strict(),
   z.object({ action: z.literal("brief"), account_id: id }).strict(),
-  z.object({ action: z.literal("ask"), question: text.max(1000) }).strict(),
+  z
+    .object({
+      action: z.literal("ask"),
+      question: text.max(1000),
+      narrate: z.boolean().optional(),
+    })
+    .strict(),
   z
     .object({ action: z.literal("workflow"), id, enabled: z.boolean() })
     .strict(),
@@ -95,6 +119,7 @@ export async function mutate(
   s: Session,
   input: unknown,
   requestId: string,
+  provider?: NarrativeProvider,
 ) {
   const parsed = mutationSchema.safeParse(input);
   if (!parsed.success)
@@ -127,7 +152,81 @@ export async function mutate(
     statements.push(
       audit(db, s, b.action, entity, entityId, detail, requestId),
     );
-  if (b.action === "create_opportunity") {
+  if (b.action === "execute_plan") {
+    const approval = d.approvals.find((a) => a.id === b.id);
+    if (!approval || approval.requested_by !== s.user.id)
+      throw new AppError(
+        403,
+        "Only the requesting user can start their approved plan.",
+      );
+    if (approval.status !== "approved")
+      throw new AppError(
+        409,
+        "Independent approval is required before execution.",
+      );
+    statements.push(
+      db
+        .prepare(
+          "UPDATE approvals SET status='executed',updated_at=?,metadata=? WHERE workspace_id=? AND id=? AND status='approved'",
+        )
+        .bind(now, requestId, s.workspace_id, b.id),
+    );
+    statements.push(
+      db
+        .prepare(
+          "UPDATE tasks SET status='in_progress',updated_at=? WHERE workspace_id=? AND recommendation_id=? AND EXISTS (SELECT 1 FROM approvals WHERE workspace_id=? AND id=? AND metadata=?)",
+        )
+        .bind(
+          now,
+          s.workspace_id,
+          approval.recommendation_id,
+          s.workspace_id,
+          b.id,
+          requestId,
+        ),
+    );
+    const event = {
+      ...baseRow(s.workspace_id),
+      actor_id: s.user.id,
+      action: "approval.executed",
+      entity_type: "approvals",
+      entity_id: b.id,
+      detail: "Human started internal planning; no external delivery",
+      request_id: requestId,
+    };
+    const cols = Object.keys(event);
+    statements.push(
+      db
+        .prepare(
+          `INSERT INTO audit_events (${cols.join(",")}) SELECT ${cols.map(() => "?").join(",")} WHERE EXISTS (SELECT 1 FROM approvals WHERE workspace_id=? AND id=? AND metadata=?)`,
+        )
+        .bind(...Object.values(event), s.workspace_id, b.id, requestId),
+    );
+    const result = (await db.batch(statements)) as {
+      meta?: { changes?: number };
+    }[];
+    if (result[0]?.meta?.changes === 0)
+      throw new AppError(
+        409,
+        "Concurrent execution detected. Refresh and retry.",
+      );
+    return { ok: true };
+  }
+  if (b.action === "import_email") return ingestEmail(db, s, d, b, requestId);
+  if (b.action === "capture_snapshot") {
+    if (all.intelligence_snapshots.length + d.accounts.length > 1800)
+      throw new AppError(
+        409,
+        "Snapshot capacity reached; archive or export the demo workspace.",
+      );
+    for (const row of snapshotRows(d, s.workspace_id))
+      statements.push(insert(db, "intelligence_snapshots", row));
+    addAudit(
+      "intelligence_snapshots",
+      "batch",
+      "Captured current accessible account frames.",
+    );
+  } else if (b.action === "create_opportunity") {
     const a = account(b.account_id);
     if (["Support", "Customer Success"].includes(s.user.role))
       throw new AppError(403, "Sales role required for commercial changes.");
@@ -249,7 +348,15 @@ export async function mutate(
       )
     )
       throw new AppError(400, "Opportunity must belong to this account.");
+    if (
+      b.contact_id &&
+      !d.contacts.some(
+        (c) => c.id === b.contact_id && c.account_id === b.account_id,
+      )
+    )
+      throw new AppError(400, "Contact must belong to this account.");
     const aid = crypto.randomUUID();
+
     statements.push(
       insert(db, "activities", {
         ...baseRow(s.workspace_id, aid),
@@ -263,6 +370,14 @@ export async function mutate(
         sentiment: "neutral",
       }),
     );
+    if (b.contact_id)
+      statements.push(
+        insert(db, "activity_contacts", {
+          ...baseRow(s.workspace_id),
+          activity_id: aid,
+          contact_id: b.contact_id,
+        }),
+      );
     addAudit(
       "activities",
       aid,
@@ -280,6 +395,19 @@ export async function mutate(
     };
     if (!allowed[r.status]?.includes(b.status))
       throw new AppError(409, "Invalid recommendation transition.");
+    if (
+      b.status === "completed" &&
+      !d.approvals.some(
+        (a) =>
+          a.recommendation_id === r.id &&
+          a.status === "executed" &&
+          a.requested_by === s.user.id,
+      )
+    )
+      throw new AppError(
+        409,
+        "Start the independently approved plan before completing it.",
+      );
     const stamp = JSON.stringify({ request_id: requestId });
     statements.push(
       db
@@ -310,6 +438,16 @@ export async function mutate(
         )
         .bind(...Object.values(row), s.workspace_id, r.id, stamp);
     };
+    statements.push(
+      gated("recommendation_feedback", {
+        ...baseRow(s.workspace_id),
+        recommendation_id: r.id,
+        user_id: s.user.id,
+        decision: b.status,
+        reason_code: b.reason_code || null,
+        comment: b.outcome || null,
+      }),
+    );
     if (b.status === "accepted") {
       statements.push(
         gated("tasks", {
@@ -374,6 +512,14 @@ export async function mutate(
       throw new AppError(
         409,
         "The underlying data issue still exists. Correct the source record before resolving.",
+      );
+    if (
+      b.action === "task" &&
+      d.tasks.find((t) => t.id === b.id)?.recommendation_id
+    )
+      throw new AppError(
+        409,
+        "Complete recommendation-linked work through its approved recommendation lifecycle.",
       );
     const status =
       b.action === "task"
@@ -581,6 +727,7 @@ export async function mutate(
         summary: brief.summary,
         evidence: JSON.stringify(brief.evidence),
         method: brief.method,
+        metadata: JSON.stringify({ structured: accountMemory(d, a.id) }),
       }),
     );
     addAudit(
@@ -592,14 +739,39 @@ export async function mutate(
     return brief;
   } else if (b.action === "ask") {
     const start = Date.now();
-    const result = answerQuestion(b.question, d);
+    const result = answerQuestion(b.question, d, new Date(), s.user);
+    if (b.narrate) {
+      const quota = provider
+        ? await db
+            .prepare(
+              "INSERT INTO rate_limits (key,count,expires_at) VALUES (?,1,?) ON CONFLICT(key) DO UPDATE SET count=count+1 WHERE count<20 RETURNING count",
+            )
+            .bind(
+              "narrative:" + s.workspace_id + ":" + now.slice(0, 10),
+              new Date(Date.now() + DAY).toISOString(),
+            )
+            .first<{ count: number }>()
+        : null;
+      result.narrative =
+        provider && !quota
+          ? {
+              status: "fallback",
+              provider: "deterministic",
+              reason: "Workspace daily narrative budget reached.",
+            }
+          : await narrate(result, provider);
+    }
     statements.push(
       insert(db, "ai_requests", {
         ...baseRow(s.workspace_id),
         user_id: s.user.id,
         intent: result.intent,
         status: result.intent === "unsupported" ? "unsupported" : "completed",
-        provider: "deterministic",
+        provider: result.narrative?.provider || "deterministic",
+        metadata: JSON.stringify({
+          narrative_status: result.narrative?.status || "not_requested",
+          reason: result.narrative?.reason || null,
+        }),
         record_count: result.evidence.length,
         duration_ms: Date.now() - start,
       }),

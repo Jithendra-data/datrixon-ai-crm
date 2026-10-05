@@ -62,9 +62,16 @@ assert.equal(workspace.synthetic, true);
 const answer = await call("/api/actions", {
   action: "ask",
   question: "Why did forecast decline?",
+  narrate: true,
 });
-assert.equal(answer.intent, "forecast_change");
+assert.equal(answer.intent, "snapshot_attribution");
+assert.equal(answer.narrative.status,"unconfigured");
 assert.ok(answer.evidence.length);
+await call("/api/actions",{action:"capture_snapshot"});
+const email={action:"import_email",external_id:"http-smoke-email",from:workspace.data.contacts.find(c=>c.account_id==="a2").email,subject:"Smoke-test planning review",body:"Synthetic integration test event",occurred_at:new Date().toISOString()};
+const imported=await call("/api/actions",email);assert.equal(imported.duplicate,false);
+assert.equal((await call("/api/actions",email)).duplicate,true);
+const refreshed=await call("/api/workspace");assert.equal(refreshed.data.ingestion_events.length,1);assert.ok(refreshed.data.memories.length);
 const search = await call("/api/search?q=Meridian");
 assert.ok(search.total > 0);
 await call("/api/persona", { user_id: "analyst" });
@@ -95,6 +102,11 @@ for (const route of [
   "/workspace/quality",
   "/workspace/governance",
   "/workspace/economics",
+  "/workspace/morning",
+  "/workspace/value",
+  "/workspace/integrations",
+  "/workspace/analytics",
+  "/workspace/audit",
 ]) {
   const r = await request(route);
   assert.equal(r.status, 200, route);
@@ -103,5 +115,5 @@ for (const route of [
 await call("/api/logout", {});
 await call("/api/workspace", undefined, 401);
 console.log(
-  "HTTP smoke passed: auth, seed, scope, copilot, search, role denial, logout and 11 UI routes.",
+  "HTTP smoke passed: auth, seed, scope, copilot, search, role denial, logout, snapshots, ingestion, narrative fallback and 16 UI routes.",
 );

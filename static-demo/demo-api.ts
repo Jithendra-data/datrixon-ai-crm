@@ -10,6 +10,7 @@ import { analytics } from "../lib/crm/intelligence";
 import { mutate } from "../lib/crm/service";
 import type { Session, User } from "../lib/crm/types";
 
+import migration2 from "../drizzle/0002_nebulous_supreme_intelligence.sql?raw";
 const KEY = "datrixon-pages-v1";
 async function initialize() {
   const SQL = await initSqlJs({ locateFile: () => wasmUrl });
@@ -28,6 +29,12 @@ async function initialize() {
     sql.run(migration0);
     sql.run(migration1);
   }
+  if (
+    !sql.exec(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='intelligence_snapshots'",
+    ).length
+  )
+    sql.run(migration2);
   const db = browserDatabase(sql);
   let userId = saved?.user || "manager";
   const workspace = "browser-synthetic";

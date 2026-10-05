@@ -12,6 +12,10 @@ export interface Database {
   batch(statements: Statement[]): Promise<unknown[]>;
 }
 export const tableNames: (keyof Dataset)[] = [
+  "intelligence_snapshots",
+  "recommendation_feedback",
+  "ingestion_events",
+  "activity_contacts",
   "accounts",
   "contacts",
   "opportunities",

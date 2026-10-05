@@ -61,7 +61,7 @@ export function deriveRecommendations(d: Dataset, now = new Date()) {
         evidence: JSON.stringify(r.factors),
         priority: r.score,
       });
-    const last = lastContact(d, o.account_id, o.id);
+    const last = lastContact(d, o.account_id, o.id, now);
     if (last && daysSince(last.occurred_at, now) >= 14)
       out.push({
         id: `follow-${o.id}`,
@@ -203,7 +203,7 @@ export function quality(d: Dataset, now = new Date()) {
         `${o.name} has passed its close date.`,
         "Confirm timing with the customer and update the opportunity.",
       );
-    const a = lastContact(d, o.account_id, o.id);
+    const a = lastContact(d, o.account_id, o.id, now);
     if (!a)
       add(
         "opportunities",
@@ -239,7 +239,7 @@ export function workflowMatches(
   now = new Date(),
 ) {
   if (!isOpen(o)) return false;
-  const last = lastContact(d, o.account_id, o.id);
+  const last = lastContact(d, o.account_id, o.id, now);
   switch (def.condition) {
     case "inactive_14d":
       return !last || daysSince(last.occurred_at, now) >= 14;

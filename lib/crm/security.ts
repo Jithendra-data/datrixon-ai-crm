@@ -39,6 +39,20 @@ export function scopeData(data: Dataset, user: User): Dataset {
   const quoteIds = new Set(quotes.map((q) => q.id));
   return {
     ...data,
+    intelligence_snapshots: data.intelligence_snapshots.filter((x) =>
+      ids.has(x.account_id),
+    ),
+    recommendation_feedback: data.recommendation_feedback.filter((x) =>
+      recs.has(x.recommendation_id),
+    ),
+    ingestion_events: data.ingestion_events.filter((x) =>
+      ids.has(x.account_id),
+    ),
+    activity_contacts: data.activity_contacts.filter((x) =>
+      data.activities.some(
+        (a) => a.id === x.activity_id && ids.has(a.account_id),
+      ),
+    ),
     accounts,
     opportunities,
     orders,

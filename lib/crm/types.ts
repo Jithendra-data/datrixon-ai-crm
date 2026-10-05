@@ -6,6 +6,10 @@ export type Contact = typeof s.contacts.$inferSelect;
 export type User = typeof s.users.$inferSelect;
 export type Recommendation = typeof s.recommendations.$inferSelect;
 export type Dataset = {
+  intelligence_snapshots: (typeof s.intelligenceSnapshots.$inferSelect)[];
+  recommendation_feedback: (typeof s.recommendationFeedback.$inferSelect)[];
+  ingestion_events: (typeof s.ingestionEvents.$inferSelect)[];
+  activity_contacts: (typeof s.activityContacts.$inferSelect)[];
   accounts: Account[];
   contacts: Contact[];
   opportunities: Opportunity[];

@@ -1,3 +1,4 @@
+import { syntheticHistory, snapshotRows } from "./history";
 import type { Dataset } from "./types";
 import { deriveRecommendations, quality, agentCatalog } from "./agents";
 import { DAY } from "./intelligence";
@@ -467,6 +468,10 @@ export function seedRows(
     "memories",
     "ai_requests",
     "approvals",
+    "intelligence_snapshots",
+    "recommendation_feedback",
+    "ingestion_events",
+    "activity_contacts",
   ])
     rows[key] = [];
   const data = rows as unknown as Dataset;
@@ -517,6 +522,10 @@ export function seedRows(
       detail: "Isolated synthetic scenario initialized. No real customer data.",
       request_id: crypto.randomUUID(),
     },
+  ];
+  rows.intelligence_snapshots = [
+    ...syntheticHistory(data, workspace, now),
+    ...snapshotRows(data, workspace, now),
   ];
   return rows;
 }

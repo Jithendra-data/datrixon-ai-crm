@@ -8,11 +8,13 @@ export function lastContact(
   d: Dataset,
   accountId: string,
   opportunityId?: string,
+  now = new Date(),
 ) {
   return d.activities
     .filter(
       (a) =>
         a.account_id === accountId &&
+        Date.parse(a.occurred_at) <= now.getTime() &&
         (!opportunityId || a.opportunity_id === opportunityId) &&
         ["email", "call", "meeting"].includes(a.kind),
     )
@@ -22,7 +24,7 @@ export function risk(o: Opportunity, d: Dataset, now = new Date()): Score {
   if (!isOpen(o))
     return { score: 0, factors: [], method: "rule-based / risk-v1" };
   const factors: Score["factors"] = [];
-  const contact = lastContact(d, o.account_id, o.id);
+  const contact = lastContact(d, o.account_id, o.id, now);
   const quiet = contact ? daysSince(contact.occurred_at, now) : null;
   if (quiet === null || quiet >= 14)
     factors.push({
@@ -95,7 +97,7 @@ export function risk(o: Opportunity, d: Dataset, now = new Date()): Score {
 }
 export function health(a: Account, d: Dataset, now = new Date()): Score {
   const factors: Score["factors"] = [];
-  const last = lastContact(d, a.id);
+  const last = lastContact(d, a.id, undefined, now);
   const quiet = last ? daysSince(last.occurred_at, now) : 999;
   if (quiet >= 14)
     factors.push({
@@ -126,7 +128,10 @@ export function health(a: Account, d: Dataset, now = new Date()): Score {
       source: `tasks:${overdue[0].id}`,
     });
   const recent = d.activities.filter(
-    (x) => x.account_id === a.id && daysSince(x.occurred_at, now) <= 30,
+    (x) =>
+      x.account_id === a.id &&
+      Date.parse(x.occurred_at) <= now.getTime() &&
+      daysSince(x.occurred_at, now) <= 30,
   ).length;
   const prior = d.activities.filter(
     (x) =>
@@ -196,7 +201,7 @@ export function analytics(d: Dataset, now = new Date()) {
     ),
     stale: sum(
       open.filter((o) => {
-        const a = lastContact(d, o.account_id, o.id);
+        const a = lastContact(d, o.account_id, o.id, now);
         return !a || daysSince(a.occurred_at, now) >= 14;
       }),
     ),

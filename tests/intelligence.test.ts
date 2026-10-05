@@ -163,9 +163,9 @@ test("copilot evidence never escapes representative scope", () => {
 });
 test("forecast explanation attributes exact records, not invented trend", () => {
   const a = answerQuestion("Why did forecast decline?", d, now);
-  assert.equal(a.intent, "forecast_change");
-  assert.equal(a.evidence.length, 4);
-  assert.match(a.answer, /excludes unrecorded/);
+  assert.equal(a.intent, "snapshot_attribution");
+  assert.ok(a.evidence.some((e) => e.type === "intelligence_snapshots"));
+  assert.match(a.confidence, /Synthetic baselines/);
 });
 test("RBAC denies analyst writes and supports manager approval", () => {
   assert.equal(can("Analyst", "write"), false);

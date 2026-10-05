@@ -630,3 +630,108 @@ export const approvals = sqliteTable(
     }),
   ],
 );
+
+// A complete per-account frame holds the metrics and source state needed for
+// coherent pipeline, forecast, health, risk and quality comparisons.
+export const intelligenceSnapshots = sqliteTable(
+  "intelligence_snapshots",
+  {
+    ...base(),
+    account_id: text("account_id").notNull(),
+    captured_at: text("captured_at").notNull(),
+    capture_id: text("capture_id").notNull(),
+    method: text("method").notNull(),
+    payload: text("payload").notNull(),
+  },
+  (t) => [
+    identity(t),
+    foreignKey({
+      columns: [t.workspace_id, t.account_id],
+      foreignColumns: [accounts.workspace_id, accounts.id],
+    }),
+    index("idx_snapshots_account_time").on(
+      t.workspace_id,
+      t.account_id,
+      t.captured_at,
+    ),
+  ],
+);
+export const recommendationFeedback = sqliteTable(
+  "recommendation_feedback",
+  {
+    ...base(),
+    recommendation_id: text("recommendation_id").notNull(),
+    user_id: text("user_id").notNull(),
+    decision: text("decision").notNull(),
+    reason_code: text("reason_code"),
+    comment: text("comment"),
+  },
+  (t) => [
+    identity(t),
+    foreignKey({
+      columns: [t.workspace_id, t.recommendation_id],
+      foreignColumns: [recommendations.workspace_id, recommendations.id],
+    }),
+    foreignKey({
+      columns: [t.workspace_id, t.user_id],
+      foreignColumns: [users.workspace_id, users.id],
+    }),
+  ],
+);
+export const ingestionEvents = sqliteTable(
+  "ingestion_events",
+  {
+    ...base(),
+    provider: text("provider").notNull(),
+    external_id: text("external_id").notNull(),
+    account_id: text("account_id").notNull(),
+    contact_id: text("contact_id").notNull(),
+    activity_id: text("activity_id").notNull(),
+    received_at: text("received_at").notNull(),
+    status: text("status").notNull(),
+  },
+  (t) => [
+    identity(t),
+    uniqueIndex("idx_ingestion_idempotency").on(
+      t.workspace_id,
+      t.provider,
+      t.external_id,
+    ),
+    foreignKey({
+      columns: [t.workspace_id, t.account_id],
+      foreignColumns: [accounts.workspace_id, accounts.id],
+    }),
+    foreignKey({
+      columns: [t.workspace_id, t.contact_id],
+      foreignColumns: [contacts.workspace_id, contacts.id],
+    }),
+    foreignKey({
+      columns: [t.workspace_id, t.activity_id],
+      foreignColumns: [activities.workspace_id, activities.id],
+    }),
+  ],
+);
+export const activityContacts = sqliteTable(
+  "activity_contacts",
+  {
+    ...base(),
+    activity_id: text("activity_id").notNull(),
+    contact_id: text("contact_id").notNull(),
+  },
+  (t) => [
+    identity(t),
+    uniqueIndex("idx_activity_contact").on(
+      t.workspace_id,
+      t.activity_id,
+      t.contact_id,
+    ),
+    foreignKey({
+      columns: [t.workspace_id, t.activity_id],
+      foreignColumns: [activities.workspace_id, activities.id],
+    }),
+    foreignKey({
+      columns: [t.workspace_id, t.contact_id],
+      foreignColumns: [contacts.workspace_id, contacts.id],
+    }),
+  ],
+);

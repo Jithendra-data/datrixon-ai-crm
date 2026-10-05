@@ -15,6 +15,13 @@
       "when": 1791180928665,
       "tag": "0001_freezing_patriot",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791185641371,
+      "tag": "0002_nebulous_supreme_intelligence",
+      "breakpoints": true
     }
   ]
 }
